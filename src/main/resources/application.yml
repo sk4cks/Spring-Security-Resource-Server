@@ -1,0 +1,5 @@
+spring:
+  application: spring-security-resource-server
+
+server:
+  port: 8081
