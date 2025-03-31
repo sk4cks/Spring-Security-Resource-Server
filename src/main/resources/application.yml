@@ -1,5 +1,10 @@
-spring:
-  application: spring-security-resource-server
-
 server:
   port: 8081
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuerUri: http://localhost:8080/realms/oauth2
+          jwkSetUri: http://localhost:8080/realms/oauth2/protocol/openid-connect/certs
