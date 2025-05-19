@@ -14,5 +14,8 @@ public class IndexController {
         return "index";
     }
 
-
+    @GetMapping("/api/user")
+    public Authentication index(Authentication authentication) {
+        return authentication;
+    }
 }
