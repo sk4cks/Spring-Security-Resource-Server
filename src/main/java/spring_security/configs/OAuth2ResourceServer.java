@@ -41,8 +41,8 @@ public class OAuth2ResourceServer {
                 .requestMatchers("/").permitAll()
                 .anyRequest().authenticated());
         http.userDetailsService(this.userDetailsService());
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         http.addFilterBefore(this.jwtAuthenticationFilter(null, null), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(this.jwtAuthorizationRsaFilter(null), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

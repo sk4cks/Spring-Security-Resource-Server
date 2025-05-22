@@ -8,4 +8,4 @@ spring:
         jwt:
           issuerUri: http://localhost:8080/realms/oauth2
           jwkSetUri: http://localhost:8080/realms/oauth2/protocol/openid-connect/certs
-          jwsAlgorithms: RS256
+          jwsAlgorithms: RS512
