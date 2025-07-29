@@ -12,6 +12,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -33,15 +36,33 @@ import spring_security.signature.RsaPublicKeySecuritySigner;
 import spring_security.signature.RsaSecuritySigner;
 
 @Configuration
+@EnableMethodSecurity
 public class OAuth2ResourceServer {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain1(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable());
         http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(request -> request
                 .requestMatchers("/").permitAll()
+                .requestMatchers("/photos/1").hasAuthority("SCOPE_photo")
+                .anyRequest().authenticated());
+        http.userDetailsService(this.userDetailsService());
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+//        http.addFilterBefore(this.jwtAuthenticationFilter(null, null), UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterBefore(this.jwtAuthorizationRsaPublicKeyFilter(null), UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain2(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable());
+        http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        http.authorizeHttpRequests(request -> request
+                .requestMatchers("/").permitAll()
+                .requestMatchers("/photos/2").permitAll()
                 .anyRequest().authenticated());
         http.userDetailsService(this.userDetailsService());
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
