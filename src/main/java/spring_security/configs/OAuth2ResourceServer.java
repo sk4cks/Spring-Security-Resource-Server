@@ -24,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -41,15 +42,23 @@ public class OAuth2ResourceServer {
 
     @Bean
     public SecurityFilterChain securityFilterChain1(HttpSecurity http) throws Exception {
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new CustomRoleConvert());
+
         http.csrf(csrf -> csrf.disable());
         http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(request -> request
                 .requestMatchers("/").permitAll()
-                .requestMatchers("/photos/1").hasAuthority("SCOPE_photo")
+                .requestMatchers("/photos/1").hasAuthority("ROLE_photo")
+                .requestMatchers("/photos/3").hasAuthority("ROLE_default-roles-oauth2")
                 .anyRequest().authenticated());
         http.userDetailsService(this.userDetailsService());
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        http.oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwt ->
+                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)
+                )
+        );
 //        http.addFilterBefore(this.jwtAuthenticationFilter(null, null), UsernamePasswordAuthenticationFilter.class);
 //        http.addFilterBefore(this.jwtAuthorizationRsaPublicKeyFilter(null), UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -29,4 +29,14 @@ public class PhotoController {
                 .userId("user2")
                 .build();
     }
+
+    @GetMapping("/photos/3")
+    public Photo photo3() {
+        return Photo.builder()
+                .photoId("3")
+                .photoTitle("Photo 3 title")
+                .photoDescription("Photo is nice")
+                .userId("user3")
+                .build();
+    }
 }
