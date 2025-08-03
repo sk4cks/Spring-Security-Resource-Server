@@ -1,88 +1,43 @@
 package spring_security.configs;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
-import com.nimbusds.jose.jwk.OctetSequenceKey;
-import com.nimbusds.jose.jwk.RSAKey;
-import jakarta.servlet.Filter;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.introspection.NimbusOpaqueTokenIntrospector;
+import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import spring_security.filter.authentication.JwtAuthenticationFilter;
-import spring_security.filter.authorization.JwtAuthorizationMacFilter;
-import spring_security.filter.authorization.JwtAuthorizationRsaFilter;
-import spring_security.filter.authorization.JwtAuthorizationRsaPublicKeyFilter;
-import spring_security.signature.MacSecuritySigner;
-import spring_security.signature.RsaPublicKeySecuritySigner;
-import spring_security.signature.RsaSecuritySigner;
 
 @Configuration
 @EnableMethodSecurity
 public class OAuth2ResourceServer {
 
     @Bean
-    public SecurityFilterChain securityFilterChain1(HttpSecurity http) throws Exception {
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new CustomRoleConvert());
-
-        http.csrf(csrf -> csrf.disable());
-        http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        http.authorizeHttpRequests(request -> request
-                .requestMatchers("/").permitAll()
-                .requestMatchers("/photos/1").hasAuthority("ROLE_photo")
-                .requestMatchers("/photos/3").hasAuthority("ROLE_default-roles-oauth2")
-                .anyRequest().authenticated());
-        http.userDetailsService(this.userDetailsService());
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(request -> request.anyRequest().authenticated());
         http.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwt ->
-                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)
-                )
-        );
-//        http.addFilterBefore(this.jwtAuthenticationFilter(null, null), UsernamePasswordAuthenticationFilter.class);
-//        http.addFilterBefore(this.jwtAuthorizationRsaPublicKeyFilter(null), UsernamePasswordAuthenticationFilter.class);
+                oauth2.opaqueToken(Customizer.withDefaults()));
+
         return http.build();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain2(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
-        http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+    public OpaqueTokenIntrospector opaqueTokenIntrospector(OAuth2ResourceServerProperties properties) {
+        OAuth2ResourceServerProperties.Opaquetoken opaquetoken = properties.getOpaquetoken();
 
-        http.authorizeHttpRequests(request -> request
-                .requestMatchers("/").permitAll()
-                .requestMatchers("/photos/2").permitAll()
-                .anyRequest().authenticated());
-        http.userDetailsService(this.userDetailsService());
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-//        http.addFilterBefore(this.jwtAuthenticationFilter(null, null), UsernamePasswordAuthenticationFilter.class);
-//        http.addFilterBefore(this.jwtAuthorizationRsaPublicKeyFilter(null), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
-
-    @Bean
-    public JwtAuthorizationRsaPublicKeyFilter jwtAuthorizationRsaPublicKeyFilter(JwtDecoder jwtDecoder) throws JOSEException {
-        return new JwtAuthorizationRsaPublicKeyFilter(jwtDecoder);
+        return new NimbusOpaqueTokenIntrospector(opaquetoken.getIntrospectionUri(),
+                opaquetoken.getClientId(),
+                opaquetoken.getClientSecret());
     }
 
 //    @Bean
@@ -100,13 +55,6 @@ public class OAuth2ResourceServer {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(RsaPublicKeySecuritySigner rsaPublicKeySecuritySigner, RSAKey rsaKey) throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(rsaPublicKeySecuritySigner, rsaKey);
-        jwtAuthenticationFilter.setAuthenticationManager(this.authenticationManager(null));
-
-        return jwtAuthenticationFilter;
-    }
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("user").password("1234").authorities("ROLE_USER").build();
