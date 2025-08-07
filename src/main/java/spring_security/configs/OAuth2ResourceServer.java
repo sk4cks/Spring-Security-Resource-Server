@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.server.resource.introspection.NimbusOpaqueTokenIntrospector;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,13 +30,18 @@ public class OAuth2ResourceServer {
         return http.build();
     }
 
-    @Bean
+/*    @Bean
     public OpaqueTokenIntrospector opaqueTokenIntrospector(OAuth2ResourceServerProperties properties) {
         OAuth2ResourceServerProperties.Opaquetoken opaquetoken = properties.getOpaquetoken();
 
         return new NimbusOpaqueTokenIntrospector(opaquetoken.getIntrospectionUri(),
                 opaquetoken.getClientId(),
                 opaquetoken.getClientSecret());
+    }*/
+
+    @Bean
+    public OpaqueTokenIntrospector opaqueTokenIntrospector(OAuth2ResourceServerProperties properties) {
+        return new CustomOpaqueTokenIntrospector(properties);
     }
 
 //    @Bean
