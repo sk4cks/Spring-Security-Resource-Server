@@ -1,11 +1,9 @@
 server:
-  port: 8081
+  port: 8082
 
 spring:
   security:
     oauth2:
       resourceserver:
-        opaquetoken:
-          introspectionUri: http://localhost:8080/realms/oauth2/protocol/openid-connect/token/introspect
-          clientId: oauth2-client-app
-          clientSecret: 3HaCXNApuA7VuXEWX7zPRnwOWWbaJKsV
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/oauth2/protocol/openid-connect/certs
