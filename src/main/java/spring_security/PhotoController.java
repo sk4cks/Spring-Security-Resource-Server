@@ -1,10 +1,14 @@
 package spring_security;
 
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import spring_security.sharedobject.Photo;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class PhotoController {
@@ -12,27 +16,19 @@ public class PhotoController {
     @GetMapping("/photos")
     public List<Photo> photos() {
 
-        Photo photo1 = getPhoto("1", "Photo 1 Title", "Photo is nice", "user1");
-        Photo photo2 = getPhoto("2", "Photo 2 Title", "Photo is beautiful", "user2");
+        Photo photo1 = PhotoService.getBuild("1 ", "Photo1 title ", "Photo is nice ", "user1 ");
+        Photo photo2 = PhotoService.getBuild("2 ", "Photo2 title ", "Photo is beautiful ", "user2 ");
 
         return Arrays.asList(photo1,photo2);
     }
 
-    @GetMapping("/remotePhotos")
-    public List<Photo> remotePhotos() {
+    @GetMapping("/tokenExpire")
+    public Map<String, Object> tokenExpire(){
 
-        Photo photo1 = getPhoto("Remote 1", "Remote Photo 1 Title", "Remote Photo is nice", "Remote user1");
-        Photo photo2 = getPhoto("Remote 2", "Remote Photo 2 Title", "Remote Photo is beautiful", "Remote user2");
+        Map<String, Object> result = new HashMap<>();
+        result.put("error",new OAuth2Error("invalid token", "token is expired", null));
 
-        return Arrays.asList(photo1,photo2);
+        return result;
     }
 
-    private Photo getPhoto(String photoId, String photoTitle, String photoDesc, String userId) {
-        return Photo.builder()
-                .photoId(photoId)
-                .photoTitle(photoTitle)
-                .photoDescription(photoDesc)
-                .userId(userId)
-                .build();
-    }
 }
